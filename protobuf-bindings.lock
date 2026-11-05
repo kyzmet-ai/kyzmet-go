@@ -1,0 +1,7 @@
+c999c337dc235e6987680e1e4b252197c67f70c30760e5e8627d8846fbf1112e  guest/go/proto/host/v1/auth_envelopes.pb.go
+e3cce7b83cae20848f24fd8fac53e0c21c52d620a7bb5a880a2ce953aea827ca  guest/go/proto/mods/v1/model_execution.pb.go
+c2fa6725aa1f54fe4662936a37ba8a34862fad4a226eb6ff14e906fe660167df  guest/go/proto/mods/v1/router.pb.go
+6e1aac56773afd832cd07e5f7d9b963fa00731597ad4802430ceeacf28b99059  guest/go/proto/router/v1/recommendation.pb.go
+95da6253a1a96682697f252c2a0e41447cba8b49541f5aaa1cc872de90dd55b1  guest/go/proto/router/v1/service.pb.go
+52a622585fcb08477aea7865509f2eefc2840c34cefbb147dbaadbb7d007c5f0  guest/go/proto/triggers/v1/trigger_event.pb.go
+e9dea4a96dfa8f74d682cb4e90be6e8c7b4ed3e982c81ccda1c8cbaac7a3af94  guest/go/proto/triggers/v1/trigger_type.pb.go

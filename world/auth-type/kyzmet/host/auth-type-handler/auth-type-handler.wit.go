@@ -7,7 +7,9 @@
 // Canonical kyzmet.host.v1 protobufs. validate-config accepts AuthProviderConfig
 // and returns AuthConfigValidation. Other inputs use AuthOperationRequest,
 // validated for the invoked export; outputs are AuthRegistrationChallenge,
-// AuthRegisteredCredential, AuthVerificationChallenge and AuthVerificationResult.
+// AuthRegistrationResult, AuthVerificationChallenge and AuthVerificationResult.
+// The host owns each flow (Auth-Type Flows): a request names it, and a complete
+// may answer pending to be called again.
 package authtypehandler
 
 import (

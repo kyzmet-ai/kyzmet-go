@@ -5,7 +5,7 @@ d156fc8497185571bce9bb8f98974189e986bcd6acda4ec2a607909ec4625963  guest/go/world
 0d3672f41f28d4e86c15fa94ae3884ff220a4a9188f7686c79cc36e06d434587  guest/go/world/app/kyzmet/host/app-render/abi.go
 a784a413078a624f3887246246065fc9053c9fafe5c5cb4d807d87f595dbfe21  guest/go/world/app/kyzmet/host/app-render/app-render.exports.go
 35c3474f9c9306dfcf48c528877da9b3e06383caae239e7a485658b529f85dc5  guest/go/world/app/kyzmet/host/app-render/app-render.wasm.go
-703842b9d419ac409a6d820aca86ca4dea18cab954777330cc88cea5db57db53  guest/go/world/app/kyzmet/host/app-render/app-render.wit.go
+4155bed875f145e918642f1640e0b468b94280745116de00b78d534727150852  guest/go/world/app/kyzmet/host/app-render/app-render.wit.go
 d156fc8497185571bce9bb8f98974189e986bcd6acda4ec2a607909ec4625963  guest/go/world/app/kyzmet/host/app-render/empty.s
 2c3bb3509829ef56ed51360775f724eb1b3b7093145810a3bc2ea8f4d87fab20  guest/go/world/app/kyzmet/host/app-runtime/app-runtime.wasm.go
 75b267284ecdd442b396176806be377beb24eb81cf0b167ec3b615a6f5862734  guest/go/world/app/kyzmet/host/app-runtime/app-runtime.wit.go
@@ -93,7 +93,7 @@ d156fc8497185571bce9bb8f98974189e986bcd6acda4ec2a607909ec4625963  guest/go/world
 54d88e70349d8ac189df8708d0398c942c81d342af7495c844dadb9cadca6a23  guest/go/world/app/kyzmet/host/vites/vites.wit.go
 c3728d69818bef5684d64a5a5417974f561835d60d7398e9f1ca7983e47f6a1d  guest/go/world/auth-type/kyzmet/host/auth-type-handler/auth-type-handler.exports.go
 c19e7387fa9ae096a60c0fb8ecfbbe899727d86d01b6cffdc878ffed8bc49557  guest/go/world/auth-type/kyzmet/host/auth-type-handler/auth-type-handler.wasm.go
-7632dfd02d75b65f1ae5a8c50e6d99ef9bce2ae9ecbf705e8297c56693e4d954  guest/go/world/auth-type/kyzmet/host/auth-type-handler/auth-type-handler.wit.go
+4c5e91d3b84ae138a0a97c4bd3cfb0b56107e0dc7519de19c8019f6423cd08c7  guest/go/world/auth-type/kyzmet/host/auth-type-handler/auth-type-handler.wit.go
 d156fc8497185571bce9bb8f98974189e986bcd6acda4ec2a607909ec4625963  guest/go/world/auth-type/kyzmet/host/auth-type-handler/empty.s
 c946e98dfe5886863a3252e938af7a35c2b0cfac7ad3deee89397e179b56c238  guest/go/world/auth-type/kyzmet/host/auth-type/auth-type.wit.go
 6586683365f96858c7af650993a77300de1c532066058e3feac6bd5d3f5f3620  guest/go/world/auth-type/kyzmet/host/auth/auth.wasm.go
@@ -128,8 +128,8 @@ f073ec3d05b09082d3934d5a877174a1f592f993a56b8dc597ded1bba3b172d9  guest/go/world
 34bdc677a8ce078856749bc497162ef4b3c6d5b286b10f65299edb997433b5be  guest/go/world/local-mcp-service/kyzmet/host/local-mcp-service-handler/local-mcp-service-handler.wit.go
 fb81246846ee94224477c721ccfedb909aa7e9cb31486d0ae1018193aff2e765  guest/go/world/local-mcp-service/kyzmet/host/local-mcp-service/local-mcp-service.wit.go
 e804e933ef239877909a529680088f02664c6a08b8bf3c08aef69ec619bc99ba  guest/go/world/local-mcp-service/kyzmet/host/types/types.wit.go
-edf417fa50a5820b1a6c4a8e6d2b31153259c9c34840dcadcb142570338f0053  schemas/wit/go-preview2/MANIFEST.sha256
-5cd4d5162a6ce2a29f4fd8a991e7559a59a68a43cdf9bf5eb55aae45d987ef9a  schemas/wit/go-preview2/README.md
+ee07f71edf366ed21f82ee28e398480217ad505fa51727caeaa3e953531a3552  schemas/wit/go-preview2/MANIFEST.sha256
+b422992819cc7e3413465204442a9a268fdc0297dc4c737b770b1c3f44a18a6c  schemas/wit/go-preview2/README.md
 8d4f13e628d2e8f029f6d668d8075db5e6c8867238c0436cc966dd9a535148e1  schemas/wit/go-preview2/deps/cli/environment.wit
 cf2cd8649ffea8a6d1e93b3cbf0f610bb553710b9908c613fd005c229a9a9eb6  schemas/wit/go-preview2/deps/cli/package.wit
 6311ad8251ff4e0452c5be30ee70d9d6c41971c31e566dc1029d653182cd69fe  schemas/wit/go-preview2/deps/cli/stdio.wit
@@ -140,7 +140,7 @@ f26dadcbcc7b231893c5f0094b729eabeb0643dca182697433fa8ab6ab786d20  schemas/wit/go
 5c0cb7d20bca9d98233f13076132081e5aa12bc825a823066ff27d4cea834a0c  schemas/wit/go-preview2/deps/io/error.wit
 88e2b5c3f04e6f59a93136823403389f1df37f92df7fc32ebcc36af8b1b78bfe  schemas/wit/go-preview2/deps/io/poll.wit
 41204f72fd3568897f9f217fc4840cd8ccf117bd53cc4f53ea6eacc7712bf76f  schemas/wit/go-preview2/deps/io/streams.wit
-c3a76a281bf55d03e13c1c8a532df1e35230f35bb62f19e7d91bf0b773a38661  schemas/wit/go-preview2/deps/kyzmet-host/kyzmet-host.wit
+c3620734eee27a231009082be3e6b4caa033c801cbf7f486aa8628e6fc7914b9  schemas/wit/go-preview2/deps/kyzmet-host/kyzmet-host.wit
 80a7088264900502b6806ac59d34d4888b5817a1e9dd561f2b41798c38795512  schemas/wit/go-preview2/deps/kyzmet-router/router.wit
 b36eb876e39d3a0d63d6ca0c6fc4e84278ddc22c48173906645ed3dae3ef0c79  schemas/wit/go-preview2/deps/random/random.wit
 123f44adb21efcc7cf374ce14fe5880903bd47aa28e6b1c433419198f55d57ae  schemas/wit/go-preview2/world.wit

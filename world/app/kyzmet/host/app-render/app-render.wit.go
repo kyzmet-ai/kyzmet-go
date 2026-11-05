@@ -802,22 +802,6 @@ type RenderEvent struct {
 	Payload       cm.Option[string] `json:"payload"`
 }
 
-// TriggerPayload represents the record "kyzmet:host/app-render@0.1.0#trigger-payload".
-//
-//	record trigger-payload {
-//		media-type: string,
-//		schema: option<string>,
-//		data: list<u8>,
-//		classifications: list<string>,
-//	}
-type TriggerPayload struct {
-	_               cm.HostLayout     `json:"-"`
-	MediaType       string            `json:"media-type"`
-	Schema          cm.Option[string] `json:"schema"`
-	Data            cm.List[uint8]    `json:"data"`
-	Classifications cm.List[string]   `json:"classifications"`
-}
-
 // TriggerAuthoritySummary represents the record "kyzmet:host/app-render@0.1.0#trigger-authority-summary".
 //
 //	record trigger-authority-summary {
@@ -844,38 +828,34 @@ type TriggerReceiptRequest struct {
 
 // TriggerInvocation represents the record "kyzmet:host/app-render@0.1.0#trigger-invocation".
 //
+// One delivery of a trigger event to an app's handle-trigger. What happened
+// is the encoded event; the other fields describe this delivery (Trigger
+// Messaging Strategy, decision 4).
+//
 //	record trigger-invocation {
 //		invocation-id: string,
-//		trigger-type: list<u8>,
 //		binding-id: string,
 //		app-id: string,
-//		sphere-id: string,
-//		source: string,
-//		idempotency-key: option<string>,
-//		payload: trigger-payload,
-//		occurred-at: string,
 //		invoked-at: string,
 //		authority-summary: trigger-authority-summary,
 //		receipt-request: trigger-receipt-request,
+//		event: list<u8>,
 //	}
 type TriggerInvocation struct {
 	_            cm.HostLayout `json:"-"`
 	InvocationID string        `json:"invocation-id"`
 
-	// The trigger that fired: an encoded kyzmet.triggers.v1.TriggerType. A
-	// family newer than the guest decodes as unset, a trigger the handler
-	// does not know (docs/design/host-guest-envelopes.md, D9).
-	TriggerType      cm.List[uint8]          `json:"trigger-type"`
+	// The binding that matched: the app's AppTrigger ID.
 	BindingID        string                  `json:"binding-id"`
 	AppID            string                  `json:"app-id"`
-	SphereID         string                  `json:"sphere-id"`
-	Source           string                  `json:"source"`
-	IdempotencyKey   cm.Option[string]       `json:"idempotency-key"`
-	Payload          TriggerPayload          `json:"payload"`
-	OccurredAt       string                  `json:"occurred-at"`
 	InvokedAt        string                  `json:"invoked-at"`
 	AuthoritySummary TriggerAuthoritySummary `json:"authority-summary"`
 	ReceiptRequest   TriggerReceiptRequest   `json:"receipt-request"`
+
+	// The event: an encoded kyzmet.triggers.v1.TriggerEvent. A `details` arm
+	// or trigger family newer than the guest decodes as unset
+	// (docs/design/host-guest-envelopes.md, D9).
+	Event cm.List[uint8] `json:"event"`
 }
 
 // TriggerResultNextAction represents the record "kyzmet:host/app-render@0.1.0#trigger-result-next-action".

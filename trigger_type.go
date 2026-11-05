@@ -19,14 +19,17 @@ const (
 	TriggerFamilyTime      TriggerFamily = "time"
 	TriggerFamilyConnector TriggerFamily = "connector"
 	TriggerFamilyDevice    TriggerFamily = "device"
+	TriggerFamilyApp       TriggerFamily = "app"
+	TriggerFamilyChannel   TriggerFamily = "channel"
 )
 
 // TriggerType is a decoded kyzmet.triggers.v1.TriggerType: the trigger in
-// trigger-invocation.trigger-type and consent-summary.trigger-type, and the
-// argument to get-consent-readiness and consent-scope.triggers.
+// consent-summary.trigger-type and a trigger event's type, and the argument
+// to get-consent-readiness and consent-scope.triggers.
 //
-// Event is the family's event specifier ("battery.level", "push"); Provider
-// is set only for connector triggers. Compare triggers with ==, or by Key.
+// Event is the family's specifier ("battery.level", "push", an app message
+// type, a channel's mod ID); Provider is set only for connector triggers.
+// Compare triggers with ==, or by Key.
 type TriggerType struct {
 	Family   TriggerFamily
 	Provider string
@@ -57,7 +60,13 @@ var triggerEvents = map[TriggerFamily][]string{
 		DeviceEventNetworkAvailable, DeviceEventAppForeground, DeviceEventAppBackground, DeviceEventLocked, DeviceEventUnlocked},
 }
 
-var triggerFamilyNumbers = []TriggerFamily{"", TriggerFamilyPlatform, TriggerFamilyDev, TriggerFamilyTime, TriggerFamilyConnector, TriggerFamilyDevice}
+var triggerFamilyNumbers = []TriggerFamily{"", TriggerFamilyPlatform, TriggerFamilyDev, TriggerFamilyTime, TriggerFamilyConnector, TriggerFamilyDevice, TriggerFamilyApp, TriggerFamilyChannel}
+
+// The longest app message type and channel ID Protocol accepts.
+const (
+	maxAppMessageTypeBytes = 64
+	maxChannelIDBytes      = 255
+)
 
 // Errors from the trigger-identifier codec.
 var (
@@ -67,8 +76,8 @@ var (
 	ErrNotCanonicalTrigger  = errors.New("not a canonical trigger key")
 )
 
-// PlatformTrigger, DevTrigger, TimeTrigger, DeviceTrigger and
-// ConnectorTrigger build trigger types.
+// PlatformTrigger, DevTrigger, TimeTrigger, DeviceTrigger, ConnectorTrigger,
+// AppTrigger and ChannelTrigger build trigger types.
 func PlatformTrigger(event string) TriggerType {
 	return TriggerType{Family: TriggerFamilyPlatform, Event: event}
 }
@@ -81,6 +90,12 @@ func DeviceTrigger(event string) TriggerType {
 }
 func ConnectorTrigger(provider, event string) TriggerType {
 	return TriggerType{Family: TriggerFamilyConnector, Provider: provider, Event: event}
+}
+func AppTrigger(messageType string) TriggerType {
+	return TriggerType{Family: TriggerFamilyApp, Event: messageType}
+}
+func ChannelTrigger(channelID string) TriggerType {
+	return TriggerType{Family: TriggerFamilyChannel, Event: channelID}
 }
 
 // Known reports whether the trigger is one this SDK knows.
@@ -95,6 +110,16 @@ func (t TriggerType) Key() (string, bool) {
 			return "", false
 		}
 		return "connector." + t.Provider + "." + t.Event, true
+	case TriggerFamilyApp:
+		if t.Provider != "" || !validAppMessageType(t.Event) {
+			return "", false
+		}
+		return "app." + t.Event, true
+	case TriggerFamilyChannel:
+		if t.Provider != "" || !validChannelID(t.Event) {
+			return "", false
+		}
+		return "channel." + t.Event, true
 	case TriggerFamilyPlatform, TriggerFamilyDev, TriggerFamilyTime, TriggerFamilyDevice:
 		if t.Provider != "" || triggerEventNumber(t.Family, t.Event) == 0 {
 			return "", false
@@ -188,10 +213,12 @@ func DecodeTriggerType(b []byte) (TriggerType, error) {
 		if !known {
 			continue
 		}
-		family := triggerFamilyNumbers[number]
-		if family == TriggerFamilyConnector {
+		switch family := triggerFamilyNumbers[number]; family {
+		case TriggerFamilyConnector:
 			t, err = decodeConnectorTrigger(body)
-		} else {
+		case TriggerFamilyApp, TriggerFamilyChannel:
+			t, err = decodeSpecifierTrigger(family, body)
+		default:
 			t, err = decodeEnumTrigger(family, body)
 		}
 		if err != nil {
@@ -204,16 +231,20 @@ func DecodeTriggerType(b []byte) (TriggerType, error) {
 // Encode encodes the trigger for the host.
 func (t TriggerType) Encode() ([]byte, error) {
 	if _, ok := t.Key(); !ok {
-		if t.Family == TriggerFamilyConnector {
+		switch t.Family {
+		case TriggerFamilyConnector, TriggerFamilyApp, TriggerFamilyChannel:
 			return nil, ErrInvalidTriggerType
 		}
 		return nil, ErrUnknownTriggerType
 	}
 	var body []byte
-	if t.Family == TriggerFamilyConnector {
+	switch t.Family {
+	case TriggerFamilyConnector:
 		body = appendProtoBytes(body, 1, []byte(t.Provider))
 		body = appendProtoBytes(body, 2, []byte(t.Event))
-	} else {
+	case TriggerFamilyApp, TriggerFamilyChannel:
+		body = appendProtoBytes(body, 1, []byte(t.Event))
+	default:
 		body = appendProtoVarint(body, 1<<3)
 		body = appendProtoVarint(body, triggerEventNumber(t.Family, t.Event))
 	}
@@ -288,6 +319,81 @@ func decodeConnectorTrigger(body []byte) (TriggerType, error) {
 		return TriggerType{}, nil
 	}
 	return t, nil
+}
+
+// decodeSpecifierTrigger decodes an app or channel family, whose only field
+// is its specifier string. A specifier outside Protocol's constraints is an
+// unknown trigger.
+func decodeSpecifierTrigger(family TriggerFamily, body []byte) (TriggerType, error) {
+	t := TriggerType{Family: family}
+	r := protoReader(body)
+	for !r.done() {
+		number, wireType, err := r.key()
+		if err != nil {
+			return TriggerType{}, err
+		}
+		switch {
+		case number == 1 && wireType == 2:
+			value, err := r.bytes()
+			if err != nil {
+				return TriggerType{}, err
+			}
+			if !utf8.Valid(value) {
+				return TriggerType{}, ErrMalformedTriggerType
+			}
+			t.Event = string(value)
+		case number == 1:
+			// A protobuf reader refuses a string field in another wire type.
+			return TriggerType{}, ErrMalformedTriggerType
+		default:
+			if err := r.skip(wireType); err != nil {
+				return TriggerType{}, err
+			}
+		}
+	}
+	if _, ok := t.Key(); !ok {
+		return TriggerType{}, nil
+	}
+	return t, nil
+}
+
+// validAppMessageType: one subject token of lowercase letters, digits and
+// "-", starting with a letter.
+func validAppMessageType(v string) bool {
+	if v == "" || len(v) > maxAppMessageTypeBytes || v[0] < 'a' || v[0] > 'z' {
+		return false
+	}
+	for i := 0; i < len(v); i++ {
+		c := v[i]
+		if !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-') {
+			return false
+		}
+	}
+	return true
+}
+
+// validChannelID: a mod ID, two or more "."-separated labels, each a
+// lowercase letter followed by lowercase letters, digits and "-".
+func validChannelID(v string) bool {
+	if len(v) > maxChannelIDBytes {
+		return false
+	}
+	labels := strings.Split(v, ".")
+	if len(labels) < 2 {
+		return false
+	}
+	for _, label := range labels {
+		if label == "" || label[0] < 'a' || label[0] > 'z' {
+			return false
+		}
+		for i := 0; i < len(label); i++ {
+			c := label[i]
+			if !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-') {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func validTriggerProvider(v string) bool {

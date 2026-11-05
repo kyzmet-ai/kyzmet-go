@@ -102,23 +102,6 @@ func TestTriggerTypeEveryInvalidEncodingReadsAsTheVectorSays(t *testing.T) {
 	}
 }
 
-func TestTriggerInvocationOfAnUnknownTriggerMarshalsAndRoundTrips(t *testing.T) {
-	invocation := raw.TriggerInvocation{TriggerType: raw.TriggerType{}}
-	encoded, err := json.Marshal(invocation)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var fields map[string]any
-	_ = json.Unmarshal(encoded, &fields)
-	if fields["trigger_type"] != raw.UnknownTriggerText {
-		t.Fatalf("trigger_type %v", fields["trigger_type"])
-	}
-	var decoded raw.TriggerInvocation
-	if err := json.Unmarshal(encoded, &decoded); err != nil || decoded.TriggerType != (raw.TriggerType{}) {
-		t.Fatalf("round trip %+v, %v", decoded, err)
-	}
-}
-
 func TestTriggerTypeInvalidCanonicalKeys(t *testing.T) {
 	for _, entry := range loadTriggerVectors(t).InvalidCanonicalKeys {
 		if _, err := raw.ParseTriggerType(entry.Text); !errors.Is(err, raw.ErrNotCanonicalTrigger) {
@@ -130,19 +113,13 @@ func TestTriggerTypeInvalidCanonicalKeys(t *testing.T) {
 	}
 }
 
-func TestTriggerInvocationJSONNamesTheCanonicalKey(t *testing.T) {
-	invocation := raw.TriggerInvocation{TriggerType: raw.DeviceTrigger(raw.DeviceEventBatteryLevel)}
-	encoded, err := json.Marshal(invocation)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var fields map[string]any
-	_ = json.Unmarshal(encoded, &fields)
-	if fields["trigger_type"] != "device.battery.level" {
-		t.Fatalf("trigger_type %v", fields["trigger_type"])
-	}
-	var decoded raw.TriggerInvocation
-	if err := json.Unmarshal(encoded, &decoded); err != nil || decoded.TriggerType != invocation.TriggerType {
-		t.Fatalf("round trip %+v, %v", decoded, err)
+func TestAppAndChannelTriggersOutsideProtocolConstraintsDoNotEncode(t *testing.T) {
+	for _, bad := range []raw.TriggerType{raw.AppTrigger("a.b"), raw.ChannelTrigger("chat")} {
+		if _, err := bad.Encode(); !errors.Is(err, raw.ErrInvalidTriggerType) {
+			t.Fatalf("%+v: %v", bad, err)
+		}
+		if bad.Known() {
+			t.Fatalf("%+v is known", bad)
+		}
 	}
 }
